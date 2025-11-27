@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Users, Crown, TrendingUp, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -9,24 +8,26 @@ interface Stats {
   premium: number;
 }
 
+interface Lead {
+  email: string;
+  university: string;
+  selected_plan: "free" | "premium";
+  created_at: string;
+}
+
 const AdminDashboard = () => {
   const [stats, setStats] = useState<Stats>({ total: 0, free: 0, premium: 0 });
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const fetchStats = async () => {
+  const fetchStats = () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("leads")
-        .select("selected_plan");
-
-      if (error) throw error;
-
-      const free = data?.filter((lead) => lead.selected_plan === "free").length || 0;
-      const premium = data?.filter((lead) => lead.selected_plan === "premium").length || 0;
+      const leads: Lead[] = JSON.parse(localStorage.getItem("visapal_leads") || "[]");
+      const free = leads.filter((lead) => lead.selected_plan === "free").length;
+      const premium = leads.filter((lead) => lead.selected_plan === "premium").length;
 
       setStats({
-        total: data?.length || 0,
+        total: leads.length,
         free,
         premium,
       });
@@ -40,20 +41,17 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchStats();
 
-    // Subscribe to real-time updates
-    const channel = supabase
-      .channel("leads-changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "leads" },
-        () => {
-          fetchStats();
-        }
-      )
-      .subscribe();
+    // Listen for storage changes
+    const handleStorageChange = () => {
+      fetchStats();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("visapal_lead_added", handleStorageChange);
 
     return () => {
-      supabase.removeChannel(channel);
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("visapal_lead_added", handleStorageChange);
     };
   }, []);
 
@@ -125,7 +123,7 @@ const AdminDashboard = () => {
           </div>
 
           <p className="text-xs text-muted-foreground text-center mt-6">
-            Real-time data from Supabase • Refreshes automatically
+            Data stored locally • Enable Supabase for persistent storage
           </p>
         </div>
       </div>

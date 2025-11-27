@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CheckCircle2, Loader2, Mail } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface SignupModalProps {
@@ -40,21 +39,23 @@ const SignupModal = ({ isOpen, onClose, selectedPlan }: SignupModalProps) => {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.from("leads").insert({
-        email: email.trim().toLowerCase(),
-        university,
-        selected_plan: selectedPlan,
-      });
-
-      if (error) {
-        if (error.code === "23505") {
-          toast.error("This email is already registered");
-        } else {
-          throw error;
-        }
+      const leads = JSON.parse(localStorage.getItem("visapal_leads") || "[]");
+      
+      if (leads.some((lead: { email: string }) => lead.email === email.trim().toLowerCase())) {
+        toast.error("This email is already registered");
         setIsSubmitting(false);
         return;
       }
+
+      leads.push({
+        email: email.trim().toLowerCase(),
+        university,
+        selected_plan: selectedPlan,
+        created_at: new Date().toISOString(),
+      });
+
+      localStorage.setItem("visapal_leads", JSON.stringify(leads));
+      window.dispatchEvent(new Event("visapal_lead_added"));
 
       setIsSubmitted(true);
       toast.success("Successfully registered!");
