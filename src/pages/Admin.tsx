@@ -7,55 +7,55 @@ import { Loader2 } from "lucide-react";
 const ALLOWED_ADMIN_EMAIL = "paulkallarackel@gmail.com";
 
 const Admin = () => {
-  const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  // const navigate = useNavigate();
+  // const [isLoading, setIsLoading] = useState(true);
+  // const [isAuthorized, setIsAuthorized] = useState(false);
 
-  useEffect(() => {
-    checkAuth();
+  // useEffect(() => {
+  //   checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT' || !session) {
-        navigate('/auth');
-      } else if (session.user.email === ALLOWED_ADMIN_EMAIL) {
-        setIsAuthorized(true);
-        setIsLoading(false);
-      } else {
-        navigate('/');
-      }
-    });
+  //   const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+  //     if (event === 'SIGNED_OUT' || !session) {
+  //       navigate('/auth');
+  //     } else if (session.user.email === ALLOWED_ADMIN_EMAIL) {
+  //       setIsAuthorized(true);
+  //       setIsLoading(false);
+  //     } else {
+  //       navigate('/');
+  //     }
+  //   });
 
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+  //   return () => subscription.unsubscribe();
+  // }, [navigate]);
 
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+  // const checkAuth = async () => {
+  //   const { data: { session } } = await supabase.auth.getSession();
     
-    if (!session) {
-      navigate('/auth');
-      return;
-    }
+  //   if (!session) {
+  //     navigate('/auth');
+  //     return;
+  //   }
 
-    if (session.user.email === ALLOWED_ADMIN_EMAIL) {
-      setIsAuthorized(true);
-    } else {
-      navigate('/');
-    }
+  //   if (session.user.email === ALLOWED_ADMIN_EMAIL) {
+  //     setIsAuthorized(true);
+  //   } else {
+  //     navigate('/');
+  //   }
     
-    setIsLoading(false);
-  };
+  //   setIsLoading(false);
+  // };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center bg-background">
+  //       <Loader2 className="w-8 h-8 animate-spin text-primary" />
+  //     </div>
+  //   );
+  // }
 
-  if (!isAuthorized) {
-    return null;
-  }
+  // if (!isAuthorized) {
+  //   return null;
+  // }
 
   return (
     <div className="min-h-screen bg-background">
