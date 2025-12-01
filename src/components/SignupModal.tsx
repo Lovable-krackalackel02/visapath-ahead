@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CheckCircle2, Loader2, Mail } from "lucide-react";
+import { CheckCircle2, Loader2, Mail, AlertCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface SignupModalProps {
@@ -24,9 +25,12 @@ const universities = [
 
 const SignupModal = ({ isOpen, onClose, selectedPlan }: SignupModalProps) => {
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [university, setUniversity] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [showDisclosure, setShowDisclosure] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,26 +43,26 @@ const SignupModal = ({ isOpen, onClose, selectedPlan }: SignupModalProps) => {
     setIsSubmitting(true);
 
     try {
-      const leads = JSON.parse(localStorage.getItem("visapal_leads") || "[]");
-      
-      if (leads.some((lead: { email: string }) => lead.email === email.trim().toLowerCase())) {
-        toast.error("This email is already registered");
+      const { error } = await supabase.from("leads").insert({
+        email: email.trim().toLowerCase(),
+        name: name.trim() || null,
+        phone: phone.trim() || null,
+        university,
+        selected_plan: selectedPlan,
+      });
+
+      if (error) {
+        if (error.code === "23505") {
+          toast.error("This email is already registered");
+        } else {
+          throw error;
+        }
         setIsSubmitting(false);
         return;
       }
 
-      leads.push({
-        email: email.trim().toLowerCase(),
-        university,
-        selected_plan: selectedPlan,
-        created_at: new Date().toISOString(),
-      });
-
-      localStorage.setItem("visapal_leads", JSON.stringify(leads));
-      window.dispatchEvent(new Event("visapal_lead_added"));
-
       setIsSubmitted(true);
-      toast.success("Successfully registered!");
+      setShowDisclosure(true);
     } catch (error) {
       console.error("Error submitting lead:", error);
       toast.error("Something went wrong. Please try again.");
@@ -69,15 +73,51 @@ const SignupModal = ({ isOpen, onClose, selectedPlan }: SignupModalProps) => {
 
   const handleClose = () => {
     setEmail("");
+    setName("");
+    setPhone("");
     setUniversity("");
     setIsSubmitted(false);
+    setShowDisclosure(false);
     onClose();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md bg-card">
-        {!isSubmitted ? (
+        {showDisclosure ? (
+          <div className="py-6 text-center space-y-4">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-100 flex items-center justify-center">
+              <AlertCircle className="w-8 h-8 text-amber-600" />
+            </div>
+            
+            <h3 className="text-xl font-semibold text-foreground">
+              Research Disclosure
+            </h3>
+            
+            <div className="space-y-3 text-left bg-secondary p-4 rounded-lg">
+              <p className="text-sm text-foreground">
+                Thank you for your interest in VisaPal!
+              </p>
+              <p className="text-sm text-foreground">
+                We want to be completely transparent with you: <strong>VisaPal is currently a research study</strong> we're conducting as part of our coursework.
+              </p>
+              <p className="text-sm text-foreground">
+                We're not actively developing the application at this time. Your registration helps us understand the demand for this type of service and validate our concept.
+              </p>
+              <p className="text-sm text-foreground">
+                We truly appreciate you taking the time to register your interest. Your input is invaluable to our research.
+              </p>
+            </div>
+
+            <Button
+              variant="default"
+              className="mt-6"
+              onClick={handleClose}
+            >
+              I Understand
+            </Button>
+          </div>
+        ) : !isSubmitted ? (
           <>
             <DialogHeader>
               <DialogTitle className="text-xl font-semibold text-center">
@@ -94,6 +134,34 @@ const SignupModal = ({ isOpen, onClose, selectedPlan }: SignupModalProps) => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  className="h-11"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="name">
+                  Name <span className="text-muted-foreground text-xs">(Optional)</span>
+                </Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="John Doe"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="h-11"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">
+                  Phone Number <span className="text-muted-foreground text-xs">(Optional)</span>
+                </Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="+44 7700 900000"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
                   className="h-11"
                 />
               </div>

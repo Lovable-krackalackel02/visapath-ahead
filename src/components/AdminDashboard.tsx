@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
-import { Users, Crown, TrendingUp, RefreshCw } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Users, Crown, TrendingUp, RefreshCw, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface Stats {
   total: number;
@@ -16,42 +19,58 @@ interface Lead {
 }
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<Stats>({ total: 0, free: 0, premium: 0 });
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchStats = () => {
+  const fetchStats = async () => {
     setIsLoading(true);
     try {
-      const leads: Lead[] = JSON.parse(localStorage.getItem("visapal_leads") || "[]");
-      const free = leads.filter((lead) => lead.selected_plan === "free").length;
-      const premium = leads.filter((lead) => lead.selected_plan === "premium").length;
+      const { data, error } = await supabase
+        .from("leads")
+        .select("selected_plan");
+
+      if (error) throw error;
+
+      const free = data?.filter((lead) => lead.selected_plan === "free").length || 0;
+      const premium = data?.filter((lead) => lead.selected_plan === "premium").length || 0;
 
       setStats({
-        total: leads.length,
+        total: data?.length || 0,
         free,
         premium,
       });
     } catch (error) {
       console.error("Error fetching stats:", error);
+      toast.error("Failed to fetch stats");
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast.success("Signed out successfully");
+    navigate('/');
+  };
+
   useEffect(() => {
     fetchStats();
 
-    // Listen for storage changes
-    const handleStorageChange = () => {
-      fetchStats();
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    window.addEventListener("visapal_lead_added", handleStorageChange);
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel("leads-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "leads" },
+        () => {
+          fetchStats();
+        }
+      )
+      .subscribe();
 
     return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("visapal_lead_added", handleStorageChange);
+      supabase.removeChannel(channel);
     };
   }, []);
 
@@ -65,15 +84,25 @@ const AdminDashboard = () => {
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-xl font-semibold text-foreground">Admin Dashboard</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={fetchStats}
-              disabled={isLoading}
-            >
-              <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-              Refresh
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={fetchStats}
+                disabled={isLoading}
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+                Refresh
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSignOut}
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -123,7 +152,7 @@ const AdminDashboard = () => {
           </div>
 
           <p className="text-xs text-muted-foreground text-center mt-6">
-            Data stored locally • Enable Supabase for persistent storage
+            Real-time data • Updates automatically
           </p>
         </div>
       </div>

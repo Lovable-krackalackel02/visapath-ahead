@@ -5,7 +5,6 @@ import Features from "@/components/Features";
 import Pricing from "@/components/Pricing";
 import SignupModal from "@/components/SignupModal";
 import Footer from "@/components/Footer";
-import AdminDashboard from "@/components/AdminDashboard";
 
 const Index = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,7 +22,6 @@ const Index = () => {
         <Hero />
         <Features />
         <Pricing onSelectPlan={handleSelectPlan} />
-        <AdminDashboard />
       </main>
       <Footer />
       
