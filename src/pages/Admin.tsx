@@ -4,8 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminDashboard from "@/components/AdminDashboard";
 import { Loader2 } from "lucide-react";
 
-const ALLOWED_ADMIN_EMAIL = "paulkallarackel@gmail.com";
-
 const Admin = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
@@ -17,16 +15,27 @@ const Admin = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT' || !session) {
         navigate('/auth');
-      } else if (session.user.email === ALLOWED_ADMIN_EMAIL) {
-        setIsAuthorized(true);
-        setIsLoading(false);
       } else {
-        navigate('/');
+        // Check if user has admin role via the has_role function
+        checkAdminRole(session.user.id);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const checkAdminRole = async (userId: string) => {
+    const { data, error } = await supabase
+      .rpc('has_role', { _user_id: userId, _role: 'admin' });
+    
+    if (error || !data) {
+      setIsAuthorized(false);
+      navigate('/');
+    } else {
+      setIsAuthorized(true);
+    }
+    setIsLoading(false);
+  };
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -36,13 +45,7 @@ const Admin = () => {
       return;
     }
 
-    if (session.user.email === ALLOWED_ADMIN_EMAIL) {
-      setIsAuthorized(true);
-    } else {
-      navigate('/');
-    }
-    
-    setIsLoading(false);
+    await checkAdminRole(session.user.id);
   };
 
   if (isLoading) {
