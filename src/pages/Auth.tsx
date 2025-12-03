@@ -10,14 +10,31 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    // Check if already logged in
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        checkAndRedirect(session.user.id);
+      }
+    });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user.email === "paulkallarackel@gmail.com") {
-        navigate('/admin');
+      if (session) {
+        checkAndRedirect(session.user.id);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const checkAndRedirect = async (userId: string) => {
+    const { data } = await supabase.rpc('has_role', { _user_id: userId, _role: 'admin' });
+    if (data) {
+      navigate('/admin');
+    } else {
+      toast.error("You don't have admin access");
+      await supabase.auth.signOut();
+    }
+  };
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
@@ -25,7 +42,7 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/admin`,
+          redirectTo: `${window.location.origin}/auth`,
         },
       });
 
@@ -65,7 +82,7 @@ const Auth = () => {
         </Button>
 
         <p className="text-xs text-center text-muted-foreground">
-          Only paulkallarackel@gmail.com has admin access
+          Only authorized admins can access the dashboard
         </p>
       </div>
     </div>

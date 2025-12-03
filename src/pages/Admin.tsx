@@ -4,58 +4,61 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminDashboard from "@/components/AdminDashboard";
 import { Loader2 } from "lucide-react";
 
-const ALLOWED_ADMIN_EMAIL = "paulkallarackel@gmail.com";
-
 const Admin = () => {
-  // const navigate = useNavigate();
-  // const [isLoading, setIsLoading] = useState(true);
-  // const [isAuthorized, setIsAuthorized] = useState(false);
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
-  // useEffect(() => {
-  //   checkAuth();
+  useEffect(() => {
+    checkAuth();
 
-  //   const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-  //     if (event === 'SIGNED_OUT' || !session) {
-  //       navigate('/auth');
-  //     } else if (session.user.email === ALLOWED_ADMIN_EMAIL) {
-  //       setIsAuthorized(true);
-  //       setIsLoading(false);
-  //     } else {
-  //       navigate('/');
-  //     }
-  //   });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
+        navigate('/auth');
+      } else {
+        // Check if user has admin role via the has_role function
+        checkAdminRole(session.user.id);
+      }
+    });
 
-  //   return () => subscription.unsubscribe();
-  // }, [navigate]);
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
-  // const checkAuth = async () => {
-  //   const { data: { session } } = await supabase.auth.getSession();
+  const checkAdminRole = async (userId: string) => {
+    const { data, error } = await supabase
+      .rpc('has_role', { _user_id: userId, _role: 'admin' });
     
-  //   if (!session) {
-  //     navigate('/auth');
-  //     return;
-  //   }
+    if (error || !data) {
+      setIsAuthorized(false);
+      navigate('/');
+    } else {
+      setIsAuthorized(true);
+    }
+    setIsLoading(false);
+  };
 
-  //   if (session.user.email === ALLOWED_ADMIN_EMAIL) {
-  //     setIsAuthorized(true);
-  //   } else {
-  //     navigate('/');
-  //   }
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
     
-  //   setIsLoading(false);
-  // };
+    if (!session) {
+      navigate('/auth');
+      return;
+    }
 
-  // if (isLoading) {
-  //   return (
-  //     <div className="min-h-screen flex items-center justify-center bg-background">
-  //       <Loader2 className="w-8 h-8 animate-spin text-primary" />
-  //     </div>
-  //   );
-  // }
+    await checkAdminRole(session.user.id);
+  };
 
-  // if (!isAuthorized) {
-  //   return null;
-  // }
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!isAuthorized) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background">
