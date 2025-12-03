@@ -26,7 +26,7 @@ const Pricing = ({ onSelectPlan }: PricingProps) => {
               <div className="flex items-baseline gap-1">
                 <span className="text-4xl font-bold text-foreground">Free</span>
               </div>
-              <p className="text-muted-foreground mt-2">Get started with the basics</p>
+              <p className="text-muted-foreground mt-2">Get started with the basics — no payment required</p>
             </div>
 
             <ul className="space-y-3 mb-8">
@@ -50,7 +50,7 @@ const Pricing = ({ onSelectPlan }: PricingProps) => {
               className="w-full"
               onClick={() => onSelectPlan("free")}
             >
-              Start Free Application
+              Join Free
             </Button>
           </div>
 
@@ -66,11 +66,11 @@ const Pricing = ({ onSelectPlan }: PricingProps) => {
 
             <div className="mb-6 pt-2">
               <h3 className="text-xl font-semibold text-foreground mb-2">Premium</h3>
-              <div className="flex items-baseline gap-1">
+              <div className="flex items-baseline gap-2">
                 <span className="text-4xl font-bold text-foreground">£25</span>
-                <span className="text-muted-foreground">one-time</span>
+                <span className="text-muted-foreground">(indicative)</span>
               </div>
-              <p className="text-muted-foreground mt-2">Peace of mind included</p>
+              <p className="text-muted-foreground mt-2">Reserve your Premium spot — no payment today</p>
             </div>
 
             <ul className="space-y-3 mb-8">
@@ -96,14 +96,14 @@ const Pricing = ({ onSelectPlan }: PricingProps) => {
               className="w-full"
               onClick={() => onSelectPlan("premium")}
             >
-              Get Premium Access
+              Reserve Premium
             </Button>
           </div>
         </div>
 
         {/* Trust note */}
         <p className="text-center text-sm text-muted-foreground mt-8">
-          Secure checkout • 30-day money-back guarantee • No payment required to start
+          Note: You are signing up for the beta / waitlist. No payment is collected today — we'll email you if/when payment is required for Premium.
         </p>
       </div>
     </section>

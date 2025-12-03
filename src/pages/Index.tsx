@@ -5,6 +5,7 @@ import Features from "@/components/Features";
 import Pricing from "@/components/Pricing";
 import SignupModal from "@/components/SignupModal";
 import Footer from "@/components/Footer";
+import { Analytics } from "@vercel/analytics/react";
 
 const Index = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,6 +18,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Analytics />
       <Header />
       <main>
         <Hero />

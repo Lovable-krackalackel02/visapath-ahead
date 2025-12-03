@@ -1,4 +1,4 @@
-import { Clock, Shield, Calendar, FileText, CheckSquare, Bell } from "lucide-react";
+import { Clock, Shield, Calendar, FileText, CheckSquare, Bell, Crown } from "lucide-react";
 
 const features = [
   {
@@ -64,6 +64,24 @@ const Features = () => {
               </p>
             </div>
           ))}
+        </div>
+
+        {/* Screenshots */}
+        <div className="mt-10 flex flex-col md:flex-row items-center justify-center gap-6">
+          <div className="w-full md:w-1/2 p-4 bg-card border border-border rounded-lg shadow-soft relative">
+            <img src="/timeline.png" alt="Timeline screenshot" className="w-full h-auto rounded-md" />
+            <div className="absolute top-4 right-4 bg-black text-white text-sm font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-2">
+              <span className="uppercase">Free</span>
+            </div>
+          </div>
+
+          <div className="w-full md:w-1/2 p-4 bg-card border border-border rounded-lg shadow-soft relative">
+            <img src="/autofill.png" alt="Autofill screenshot" className="w-full h-auto rounded-md" />
+            <div className="absolute top-4 right-4 bg-primary text-white text-sm font-bold px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+              <Crown className="w-4 h-4" />
+              <span className="uppercase">Premium</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
