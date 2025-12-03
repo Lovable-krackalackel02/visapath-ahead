@@ -33,7 +33,7 @@ const Hero = () => {
           {/* CTA */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up-delay-3">
             <Button variant="hero" size="xl" onClick={scrollToPricing}>
-              Check My Eligibility
+              Sign up for beta access
               <ArrowDown className="w-5 h-5 ml-1" />
             </Button>
           </div>
